@@ -1,0 +1,169 @@
+/* 文章页面专用样式 */
+
+/* 代码块样式改进 */
+.prose pre {
+  @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
+  font-family: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+  line-height: 1.5;
+}
+
+.prose code {
+  @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+  font-family: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 text-gray-100;
+}
+
+/* 引用块样式 */
+.prose blockquote {
+  @apply border-l-4 border-blue-500 pl-4 italic my-4 text-gray-700 bg-blue-50 py-2 rounded-r;
+}
+
+/* 表格样式 */
+.prose table {
+  @apply w-full border-collapse border border-gray-300 my-4;
+}
+
+.prose th {
+  @apply bg-gray-100 border border-gray-300 px-4 py-2 text-left font-semibold;
+}
+
+.prose td {
+  @apply border border-gray-300 px-4 py-2;
+}
+
+/* 链接样式 */
+.prose a {
+  @apply text-blue-600 hover:text-blue-800 underline transition-colors;
+}
+
+/* 列表样式 */
+.prose ul {
+  @apply list-disc list-inside mb-4 space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal list-inside mb-4 space-y-1;
+}
+
+.prose li {
+  @apply text-gray-700 leading-relaxed;
+}
+
+/* 标题样式 */
+.prose h1 {
+  @apply text-3xl font-bold mt-8 mb-4 text-gray-900 scroll-mt-20;
+}
+
+.prose h2 {
+  @apply text-2xl font-bold mt-6 mb-3 text-gray-900 scroll-mt-20;
+}
+
+.prose h3 {
+  @apply text-xl font-bold mt-4 mb-2 text-gray-900 scroll-mt-20;
+}
+
+.prose h4 {
+  @apply text-lg font-semibold mt-4 mb-2 text-gray-900 scroll-mt-20;
+}
+
+.prose h5 {
+  @apply text-base font-semibold mt-3 mb-2 text-gray-900 scroll-mt-20;
+}
+
+.prose h6 {
+  @apply text-sm font-semibold mt-3 mb-2 text-gray-900 scroll-mt-20;
+}
+
+/* 段落样式 */
+.prose p {
+  @apply mb-4 leading-relaxed text-gray-700;
+}
+
+/* 图片样式 */
+.prose img {
+  @apply rounded-lg shadow-md my-4 max-w-full h-auto;
+}
+
+/* 分隔线样式 */
+.prose hr {
+  @apply border-gray-300 my-8;
+}
+
+/* 强调文本样式 */
+.prose strong {
+  @apply font-semibold text-gray-900;
+}
+
+.prose em {
+  @apply italic text-gray-700;
+}
+
+/* 删除线样式 */
+.prose del {
+  @apply line-through text-gray-500;
+}
+
+/* 标记文本样式 */
+.prose mark {
+  @apply bg-yellow-200 px-1 rounded;
+}
+
+/* 键盘按键样式 */
+.prose kbd {
+  @apply bg-gray-200 border border-gray-300 rounded px-1 py-0.5 text-xs font-mono;
+}
+
+/* 缩写样式 */
+.prose abbr {
+  @apply border-b border-dotted border-gray-400 cursor-help;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .prose {
+    @apply text-sm;
+  }
+  
+  .prose h1 {
+    @apply text-2xl;
+  }
+  
+  .prose h2 {
+    @apply text-xl;
+  }
+  
+  .prose h3 {
+    @apply text-lg;
+  }
+  
+  .prose pre {
+    @apply text-xs p-3;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .prose {
+    @apply text-black;
+  }
+  
+  .prose a {
+    @apply text-black no-underline;
+  }
+  
+  .prose a:after {
+    content: " (" attr(href) ")";
+    @apply text-xs text-gray-600;
+  }
+  
+  .prose pre {
+    @apply bg-gray-100 text-black border border-gray-300;
+  }
+  
+  .prose blockquote {
+    @apply bg-gray-100 border-gray-400;
+  }
+}

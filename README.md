@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TYE All-in-One
 
-## Getting Started
+A comprehensive web application built with Next.js that combines information sharing, text-to-speech conversion, and content management capabilities.
 
-First, run the development server:
+## Features
+
+- 📝 **Article Management**: Create, edit, and publish articles with rich markdown support
+- 🔊 **Text-to-Speech**: Convert text to natural-sounding speech with multiple language support
+- 👥 **User Management**: Role-based authentication and user administration
+- 🏷️ **Content Organization**: Categories and tags for organizing content
+- 📱 **Responsive Design**: Mobile-friendly interface with modern UI components
+- 🔒 **Security**: Comprehensive authentication, authorization, and security measures
+- 🐳 **Docker Ready**: Complete Docker setup for easy deployment
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, TypeScript, TailwindCSS
+- **Backend**: Next.js API Routes, NextAuth.js
+- **Database**: PostgreSQL with Drizzle ORM
+- **UI Components**: shadcn/ui, Radix UI
+- **Text-to-Speech**: Google Cloud Text-to-Speech API
+- **Deployment**: Docker, Docker Compose, Nginx
+
+## Quick Start
+
+### Prerequisites
+
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- Google Cloud account (for TTS functionality)
+
+### 1. Clone the Repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd tye-all-in-one
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Initialize the Project
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+./deploy.sh init
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This will:
+- Create necessary directories
+- Generate SSL certificates
+- Create configuration files
 
-## Learn More
+### 3. Configure Environment
 
-To learn more about Next.js, take a look at the following resources:
+1. Update `.env` file with your configuration:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your actual values
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Add your Google Cloud service account key:
+   ```bash
+   # Replace google-credentials.json with your actual service account key
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Deploy
 
-## Deploy on Vercel
+```bash
+./deploy.sh deploy
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This will:
+- Build the Docker images
+- Start all services
+- Run database migrations
+- Seed initial data
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 5. Access the Application
+
+- **Main Site**: https://localhost
+- **Admin Panel**: https://localhost/admin
+- **API Health**: https://localhost/api/health
+
+Default admin credentials:
+- Email: admin@example.com
+- Password: admin123
+
+## Documentation
+
+- [API Documentation](API.md) - Complete API reference
+- [Deployment Guide](DEPLOYMENT.md) - Production deployment instructions
+- [Testing Guide](TESTING.md) - Testing strategy and procedures
+- [Troubleshooting Guide](TROUBLESHOOTING.md) - Common issues and solutions
+
+## Project Structure
+
+```
+tye-all-in-one/
+├── src/
+│   ├── app/                    # Next.js app directory
+│   │   ├── api/               # API routes
+│   │   ├── admin/             # Admin panel pages
+│   │   ├── auth/              # Authentication pages
+│   │   └── ...                # Other pages
+│   ├── components/            # React components
+│   │   ├── ui/                # UI components
+│   │   └── layout/            # Layout components
+│   ├── lib/                   # Utility libraries
+│   │   ├── db/                # Database configuration
+│   │   └── ...                # Other utilities
+│   └── hooks/                 # Custom React hooks
+├── tests/                     # Test files
+│   ├── e2e/                   # End-to-end tests
+│   └── api/                   # API integration tests
+├── public/                    # Static assets
+├── docker-compose.yml         # Docker services
+├── Dockerfile                 # Application container
+├── deploy.sh                  # Deployment script
+└── ...                        # Configuration files
+```
