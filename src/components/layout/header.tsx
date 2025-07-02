@@ -13,12 +13,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Menu, 
-  X, 
-  User, 
-  Settings, 
-  LogOut, 
+import LanguageSwitcher from '@/components/ui/language-switcher';
+import { useTranslation } from '@/lib/i18n';
+import {
+  Menu,
+  X,
+  User,
+  Settings,
+  LogOut,
   Shield,
   Home,
   FileText,
@@ -28,12 +30,13 @@ import {
 
 export default function Header() {
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'Articles', href: '/articles', icon: FileText },
-    { name: 'Text-to-Speech', href: '/tts', icon: Volume2 },
+    { name: t('navigation.home'), href: '/', icon: Home },
+    { name: t('navigation.articles'), href: '/articles', icon: FileText },
+    { name: t('navigation.tts'), href: '/tts', icon: Volume2 },
   ];
 
   const handleSignOut = () => {
@@ -73,6 +76,9 @@ export default function Header() {
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {session ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -95,7 +101,7 @@ export default function Header() {
                       {session.user.role === 'admin' && (
                         <Badge variant="secondary" className="w-fit">
                           <Shield className="w-3 h-3 mr-1" />
-                          Admin
+                          {t('common.admin')}
                         </Badge>
                       )}
                     </div>
@@ -104,37 +110,37 @@ export default function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="flex items-center">
                       <User className="mr-2 h-4 w-4" />
-                      Profile
+                      {t('common.profile')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/settings" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      {t('common.settings')}
                     </Link>
                   </DropdownMenuItem>
                   {session.user.role === 'admin' && (
                     <DropdownMenuItem asChild>
                       <Link href="/admin" className="flex items-center">
                         <Shield className="mr-2 h-4 w-4" />
-                        Admin Panel
+                        {t('navigation.admin')}
                       </Link>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    {t('auth.sign_out')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" asChild>
-                  <Link href="/auth/signin">Sign In</Link>
+                  <Link href="/auth/signin">{t('auth.sign_in')}</Link>
                 </Button>
                 <Button asChild>
-                  <Link href="/auth/signup">Sign Up</Link>
+                  <Link href="/auth/signup">{t('auth.sign_up')}</Link>
                 </Button>
               </div>
             )}
@@ -166,7 +172,7 @@ export default function Header() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-base font-medium"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Icon className="w-4 h-4" />

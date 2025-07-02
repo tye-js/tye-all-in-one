@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
 
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
+  // Note: i18n configuration is not supported in App Router
+  // We handle internationalization manually in middleware and components
+
   // Image optimization
   images: {
     domains: ['localhost'],
@@ -66,6 +69,44 @@ const nextConfig: NextConfig = {
         fs: false,
         net: false,
         tls: false,
+        perf_hooks: false,
+        child_process: false,
+        worker_threads: false,
+        cluster: false,
+        dgram: false,
+        dns: false,
+        http2: false,
+        inspector: false,
+        module: false,
+        repl: false,
+        readline: false,
+        vm: false,
+        'node:perf_hooks': false,
+        'node:fs': false,
+        'node:path': false,
+        'node:url': false,
+        'node:buffer': false,
+        'node:process': false,
+        'node:stream': false,
+        'node:util': false,
+        'node:events': false,
+        'node:crypto': false,
+        'node:os': false,
+        'node:child_process': false,
+        'node:worker_threads': false,
+        'node:cluster': false,
+        'node:dgram': false,
+        'node:dns': false,
+        'node:http': false,
+        'node:https': false,
+        'node:http2': false,
+        'node:net': false,
+        'node:tls': false,
+        'node:inspector': false,
+        'node:module': false,
+        'node:repl': false,
+        'node:readline': false,
+        'node:vm': false,
       };
     }
     return config;

@@ -34,7 +34,7 @@ console.log('📍 Database URL:', DATABASE_URL.replace(/:[^:@]*@/, ':****@'));
 async function setupDatabase() {
   try {
     // 连接数据库
-    const client = postgres(DATABASE_URL, { prepare: false });
+    const client = postgres(DATABASE_URL!, { prepare: false });
     const db = drizzle(client);
 
     console.log('✅ Database connection established');

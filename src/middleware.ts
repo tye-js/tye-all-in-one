@@ -1,10 +1,110 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
+// 支持的语言 - 暂时禁用多语言路由
+const locales = ['en', 'zh', 'ja'];
+const defaultLocale = 'en';
+const ENABLE_I18N_ROUTING = false; // 设置为 false 禁用多语言路由
+
+// 从 Accept-Language 头解析语言
+function getLanguageFromAcceptLanguage(acceptLanguage: string): string {
+  if (!acceptLanguage) return 'en';
+
+  // 解析 Accept-Language 头
+  const languages = acceptLanguage
+    .split(',')
+    .map(lang => {
+      const [code, q = '1'] = lang.trim().split(';q=');
+      return { code: code.toLowerCase(), quality: parseFloat(q) };
+    })
+    .sort((a, b) => b.quality - a.quality);
+
+  // 查找支持的语言
+  for (const { code } of languages) {
+    // 精确匹配
+    if (['en', 'zh', 'ja'].includes(code)) {
+      return code;
+    }
+
+    // 语言代码匹配
+    const langCode = code.split('-')[0];
+    if (['en', 'zh', 'ja'].includes(langCode)) {
+      return langCode;
+    }
+  }
+
+  return 'en';
+}
+
+// 获取首选语言
+function getPreferredLocale(request: any): string {
+  // 1. 检查 cookie 中的偏好
+  const cookieLocale = request.cookies.get('preferred-locale')?.value;
+  if (cookieLocale && locales.includes(cookieLocale)) {
+    return cookieLocale;
+  }
+
+  // 2. 检查 Accept-Language 头
+  const acceptLanguage = request.headers.get('accept-language');
+  console.log(acceptLanguage)
+  if (acceptLanguage) {
+    const detectedLocale = getLanguageFromAcceptLanguage(acceptLanguage);
+    if (locales.includes(detectedLocale)) {
+      return detectedLocale;
+    }
+  }
+
+  // 3. 默认语言
+  return defaultLocale;
+}
+
+// 检查路径是否需要语言处理
+function shouldHandleLocale(pathname: string): boolean {
+  const excludedPaths = [
+    '/api',
+    '/auth',
+    '/_next',
+    '/favicon.ico',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/uploads',
+    '/images',
+    '/icons',
+    '/public',
+  ];
+
+  return !excludedPaths.some(path => pathname.startsWith(path));
+}
+
 export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
+
+    // 处理语言检测和重定向 - 仅在启用多语言路由时执行
+    if (ENABLE_I18N_ROUTING && shouldHandleLocale(pathname)) {
+      const preferredLocale = getPreferredLocale(req);
+
+      // 检查路径是否已经包含语言前缀
+      const pathnameHasLocale = locales.some(
+        (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+      );
+
+      // 如果没有语言前缀且不是默认语言的根路径，进行重定向
+      if (!pathnameHasLocale && !(preferredLocale === defaultLocale && pathname === '/')) {
+        const redirectUrl = new URL(`/${preferredLocale}${pathname}`, req.url);
+        redirectUrl.search = req.nextUrl.search;
+
+        const response = NextResponse.redirect(redirectUrl);
+        response.cookies.set('preferred-locale', preferredLocale, {
+          maxAge: 365 * 24 * 60 * 60,
+          httpOnly: false,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+        });
+        return response;
+      }
+    }
 
     // Admin routes protection
     if (pathname.startsWith('/admin')) {

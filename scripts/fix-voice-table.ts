@@ -35,7 +35,7 @@ async function fixVoiceTable() {
   try {
     console.log('🔧 Fixing TTS voices table structure...\n');
     
-    const client = postgres(DATABASE_URL, { prepare: false });
+    const client = postgres(DATABASE_URL!, { prepare: false });
 
     console.log('📊 Updating locale column length...');
     

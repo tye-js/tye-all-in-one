@@ -1,17 +1,33 @@
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { azureKeysService } from './azure-keys-service';
 
-// Azure Speech Service configuration
-function getAzureConfig() {
+// Azure Speech Service configuration with quota management
+async function getAzureConfig() {
+  // 首先尝试从 Azure Keys 管理获取配置
+  try {
+    const config = await azureKeysService.getBestAvailableConfig();
+    if (config) {
+      return {
+        subscriptionKey: config.speechKey,
+        region: config.speechRegion,
+        keyId: config.keyId,
+      };
+    }
+  } catch (error) {
+    console.warn('Failed to get Azure config from database, falling back to environment variables:', error);
+  }
+
+  // 回退到环境变量
   const subscriptionKey = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION;
 
   if (!subscriptionKey || !region) {
-    throw new Error('Azure Speech Service not configured. Please set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION environment variables.');
+    throw new Error('No Azure Speech Service configuration available. Please configure Azure keys in the admin panel or set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION environment variables.');
   }
 
-  return { subscriptionKey, region };
+  return { subscriptionKey, region, keyId: null };
 }
 
 export interface TTSOptions {
@@ -36,7 +52,8 @@ export const DEFAULT_LANGUAGE = 'zh-CN';
 export const DEFAULT_VOICE = 'zh-CN-XiaoxiaoNeural';
 
 export async function synthesizeSpeech(options: TTSOptions): Promise<TTSResult> {
-  const { subscriptionKey, region } = getAzureConfig();
+  const azureConfig = await getAzureConfig();
+  const { subscriptionKey, region, keyId } = azureConfig;
 
   const {
     text,
@@ -102,6 +119,17 @@ export async function synthesizeSpeech(options: TTSOptions): Promise<TTSResult> 
     // Get file size
     const fileSize = audioBuffer.byteLength;
 
+    // 更新配额使用量（如果使用的是管理的 Azure Key）
+    if (keyId) {
+      try {
+        await azureKeysService.useQuota(keyId, text.length);
+        console.log(`✅ Updated quota for key ${keyId}: +${text.length} characters`);
+      } catch (quotaError) {
+        console.warn('Failed to update quota usage:', quotaError);
+        // 不抛出错误，因为语音合成已经成功
+      }
+    }
+
     return {
       audioUrl: `/uploads/tts/${filename}`,
       fileSize,
@@ -143,7 +171,13 @@ export async function getSupportedLanguages() {
  */
 export async function getVoicesByLanguage() {
   try {
-    return await voiceSyncService.getVoicesByLanguage(true);
+    const voices = await voiceSyncService.getVoicesFromDatabase(undefined, true);
+    // 按语言分组
+    const groupedVoices: { [key: string]: any[] } = {};
+    voices.forEach((localeData: any) => {
+      groupedVoices[localeData.locale] = localeData.voices;
+    });
+    return groupedVoices;
   } catch (error) {
     console.error('Error getting voices by language:', error);
     return {};

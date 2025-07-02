@@ -3,58 +3,32 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import MainLayout from '@/components/layout/main-layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import { Volume2, Download, Play, Pause, RotateCcw, Settings } from 'lucide-react';
+import TextInput from '@/components/tts/text-input';
+import VoiceSettings from '@/components/tts/voice-settings';
+import SSMLPreview from '@/components/tts/ssml-preview';
+import AudioResult from '@/components/tts/audio-result';
+import { VoiceList, TTSResult, TTSSettings } from '@/components/tts/types';
+import { createTTSFormData, getDefaultSettings } from '@/components/tts/utils';
 import { toast } from 'sonner';
-
-interface Voice {
-  name: string;
-  displayName: string;
-  shortName: string;
-  gender: string;
-  locale: string;
-  localName:string;
-  localeName: string;
-  voiceType: string;
-  status: string;
-  styleList:string[];
-}
-
-interface VoiceList {
-  locale: string;
-  voices: Voice[];
-}
-
-
-interface TTSResult {
-  id: string;
-  audioUrl: string;
-  fileSize: number;
-  duration?: number;
-  status: string;
-}
 
 export default function TTSPage() {
   const { data: session } = useSession();
   const [text, setText] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('zh-CN');
-  const [selectedVoice, setSelectedVoice] = useState('zh-CN-XiaoxiaoNeural');
-  const [speakingRate, setSpeakingRate] = useState([1.0]);
-  const [pitch, setPitch] = useState([0.0]);
   const [isLoading, setIsLoading] = useState(false);
   const [languages, setLanguages] = useState<string[]>([]);
   const [voicesAndLanguage, setVoicesAndLanguage] = useState<VoiceList[]>();
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [result, setResult] = useState<TTSResult | null>(null);
-  // const [voiceByLanguage, setVoiceByLanguage] = useState<Voice[]>([]);
 
+  // TTS 设置
+  const [settings, setSettings] = useState<TTSSettings>(getDefaultSettings());
+
+
+  // 更新设置的辅助函数
+  const updateSettings = (updates: Partial<TTSSettings>) => {
+    setSettings(prev => ({ ...prev, ...updates }));
+  };
 
   // Fetch available languages and voices
   useEffect(() => {
@@ -63,12 +37,11 @@ export default function TTSPage() {
         const response = await fetch(`/api/tts/voices`);
         if (response.ok) {
           const data = await response.json();
-          if(data.length<=0){
+          if(data.length <= 0){
             return toast.error('No voices available. Please try again later.');
           }
-          setLanguages(data.map((item:VoiceList) => item.locale))
-          setVoicesAndLanguage(data)
-          
+          setLanguages(data.map((item: VoiceList) => item.locale));
+          setVoicesAndLanguage(data);
         }
       } catch (error) {
         console.error('Error fetching voices:', error);
@@ -79,20 +52,28 @@ export default function TTSPage() {
   }, []);
 
   // Get voices for selected language
-  const getVoicesForLanguage = (language: string): Voice[] => {
-    if(voicesAndLanguage===undefined) return [];
-  
-    // setVoiceByLanguage(voicesAndLanguage?.filter((item:VoiceList) => item.locale === language)[0].voices);
-    return (voicesAndLanguage!.filter(item=>item.locale===language))![0].voices;
+  const getVoicesForLanguage = (language: string) => {
+    if (!voicesAndLanguage) return [];
+    const languageData = voicesAndLanguage.find(item => item.locale === language);
+    return languageData?.voices || [];
   };
 
   // Handle language change
   const handleLanguageChange = (language: string) => {
-    setSelectedLanguage(language);
     const voices = getVoicesForLanguage(language);
-    if (voices.length > 0) {
-      setSelectedVoice(voices[0].displayName);
-    }
+    updateSettings({
+      selectedLanguage: language,
+      selectedVoice: voices.length > 0 ? voices[0].shortName : '',
+      selectedStyle: '', // 重置风格选择
+    });
+  };
+
+  // Handle voice change
+  const handleVoiceChange = (voiceName: string) => {
+    updateSettings({
+      selectedVoice: voiceName,
+      selectedStyle: '', // 重置风格选择
+    });
   };
 
   // Handle TTS synthesis
@@ -102,6 +83,7 @@ export default function TTSPage() {
       setCurrentAudio(null);
     }
     setResult(null);
+
     if (!text.trim()) {
       toast.error('Please enter some text to convert');
       return;
@@ -113,21 +95,16 @@ export default function TTSPage() {
     }
 
     setIsLoading(true);
-    
 
     try {
+      const formData = createTTSFormData(text, settings);
+
       const response = await fetch('/api/tts/synthesize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          text,
-          language: selectedLanguage,
-          voice: selectedVoice,
-          speakingRate: speakingRate[0],
-          pitch: pitch[0],
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -145,6 +122,8 @@ export default function TTSPage() {
       setIsLoading(false);
     }
   };
+
+
 
   // Handle audio playback
   const handlePlayPause = () => {
@@ -193,14 +172,6 @@ export default function TTSPage() {
     setIsPlaying(false);
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -215,202 +186,37 @@ export default function TTSPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main TTS Form */}
           <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Volume2 className="w-5 h-5 mr-2" />
-                  Text Input
-                </CardTitle>
-                <CardDescription>
-                  Enter the text you want to convert to speech (max 5000 characters)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="text">Text to Convert</Label>
-                  <Textarea
-                    id="text"
-                    placeholder="Enter your text here..."
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    className="min-h-[200px] mt-2"
-                    maxLength={5000}
-                  />
-                  <div className="text-sm text-gray-500 mt-1">
-                    {text.length}/5000 characters
-                  </div>
-                </div>
+            <TextInput
+              text={text}
+              setText={setText}
+              onSynthesize={handleSynthesize}
+              onReset={handleReset}
+              isLoading={isLoading}
+              isSignedIn={!!session}
+            />
 
-                <div className="flex gap-4">
-                  <Button
-                    onClick={handleSynthesize}
-                    disabled={isLoading || !text.trim() || !session}
-                    className="flex-1"
-                  >
-                    {isLoading ? (
-                      <>
-                        <LoadingSpinner size="sm" className="mr-2" />
-                        Synthesizing...
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 className="w-4 h-4 mr-2" />
-                        Generate Speech
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={handleReset}>
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Reset
-                  </Button>
-                </div>
+            <SSMLPreview text={text} settings={settings} />
 
-                {!session && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-sm text-yellow-800">
-                      Please <a href="/auth/signin" className="underline">sign in</a> to use the text-to-speech feature.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Audio Result */}
             {result && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Generated Audio</CardTitle>
-                  <CardDescription>
-                    Your speech has been generated successfully
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handlePlayPause}
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-4 h-4" />
-                        ) : (
-                          <Play className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <div className="text-sm text-gray-600">
-                        Size: {formatFileSize(result.fileSize)}
-                        {result.duration && ` • Duration: ${result.duration}s`}
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={handleDownload}>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <AudioResult
+                result={result}
+                isPlaying={isPlaying}
+                onPlayPause={handlePlayPause}
+                onDownload={handleDownload}
+              />
             )}
           </div>
 
           {/* Settings Panel */}
           <div>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Settings className="w-5 h-5 mr-2" />
-                  Voice Settings
-                </CardTitle>
-                <CardDescription>
-                  Customize the voice and speech parameters
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label htmlFor="language">Language</Label>
-                  <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {languages.map((language) => (
-                        <SelectItem key={language} value={language}>
-                          {language}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="voice">Voice</Label>
-                  <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select voice" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getVoicesForLanguage(selectedLanguage).map((voice) => (
-                        <SelectItem key={voice.shortName} value={voice.shortName}>
-                          {voice.localName} ({voice.gender==="Male"?"男":"女"})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* {
-                  selectedVoice &&  <div>
-                  <Label htmlFor="voice">Style List</Label>
-                  <Select  onValueChange={setSelectedVoice}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select Style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedVoice((voice) => (
-                        <SelectItem key={voice.shortName} value={voice.shortName}>
-                          {voice.localName} ({voice.gender==="Male"?"男":"女"})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                } */}
-
-                <div>
-                  <Label>Speaking Rate: {speakingRate[0]}</Label>
-                  <Slider
-                    value={speakingRate}
-                    onValueChange={setSpeakingRate}
-                    min={0.25}
-                    max={4.0}
-                    step={0.25}
-                    className="mt-2"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Slow</span>
-                    <span>Normal</span>
-                    <span>Fast</span>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Pitch: {pitch[0]}</Label>
-                  <Slider
-                    value={pitch}
-                    onValueChange={setPitch}
-                    min={-20}
-                    max={20}
-                    step={1}
-                    className="mt-2"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Low</span>
-                    <span>Normal</span>
-                    <span>High</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <VoiceSettings
+              settings={settings}
+              updateSettings={updateSettings}
+              languages={languages}
+              voices={getVoicesForLanguage(settings.selectedLanguage)}
+              onLanguageChange={handleLanguageChange}
+              onVoiceChange={handleVoiceChange}
+            />
           </div>
         </div>
       </div>

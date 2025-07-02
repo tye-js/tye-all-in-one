@@ -35,7 +35,7 @@ async function migrateVoiceFields() {
   try {
     console.log('🔧 Migrating TTS voices table to add new fields...\n');
     
-    const client = postgres(DATABASE_URL, { prepare: false });
+    const client = postgres(DATABASE_URL!, { prepare: false });
 
     console.log('📊 Adding new columns to tts_voices table...');
     

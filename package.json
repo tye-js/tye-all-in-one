@@ -35,7 +35,10 @@
     "migrate:voice-fields": "tsx scripts/migrate-voice-fields.ts",
     "test:voice-fields": "tsx scripts/test-voice-fields.ts",
     "test:optimized-query": "tsx scripts/test-optimized-query.ts",
-    "test:structured-query": "tsx scripts/test-structured-query.ts"
+    "test:structured-query": "tsx scripts/test-structured-query.ts",
+    "test:ssml-features": "tsx scripts/test-ssml-features.ts",
+    "test:select-fix": "tsx scripts/test-select-fix.ts",
+    "migrate:azure-keys": "tsx scripts/create-azure-keys-table.ts"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.1.0",
@@ -43,6 +46,7 @@
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@next/mdx": "^15.3.3",
+    "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
@@ -53,6 +57,7 @@
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slider": "^1.3.5",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.12",
     "@types/bcryptjs": "^2.4.6",
     "@types/pg": "^8.15.4",

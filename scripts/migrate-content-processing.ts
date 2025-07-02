@@ -34,7 +34,7 @@ if (!DATABASE_URL) {
 async function migrateContentProcessing() {
   try {
     console.log('🔗 Connecting to database...');
-    const client = postgres(DATABASE_URL, { prepare: false });
+    const client = postgres(DATABASE_URL!, { prepare: false });
     const db = drizzle(client);
 
     console.log('📊 Adding new columns to articles table...');

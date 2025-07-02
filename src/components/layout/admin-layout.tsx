@@ -13,20 +13,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Menu, 
-  X, 
+import {
+  Menu,
+  X,
   Home,
-  FileText, 
-  Users, 
-  Settings, 
+  FileText,
+  Users,
+  Settings,
   BarChart3,
   Tags,
   FolderOpen,
   Volume2,
   LogOut,
   User,
-  Shield
+  Shield,
+  Key
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +42,7 @@ const navigation = [
   { name: 'Tags', href: '/admin/tags', icon: Tags },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'TTS Requests', href: '/admin/tts', icon: Volume2 },
+  { name: 'Azure Keys', href: '/admin/azure-keys', icon: Key },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

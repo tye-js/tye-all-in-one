@@ -9,11 +9,9 @@ import { eq, sql } from 'drizzle-orm';
 
 export async function GET(
   request: NextRequest,
-  { params }: {params:{slug:string}}
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-
   try {
-       console.log("111")
     const { slug } = await params;
 
     // Get article with relations
