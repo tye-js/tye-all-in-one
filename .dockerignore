@@ -1,0 +1,55 @@
+# 防止敏感文件被包含在镜像中
+.env
+.env.local
+.env.production
+.env.development
+
+# Git 相关
+.git
+.gitignore
+
+# Node.js
+node_modules
+npm-debug.log*
+
+# Next.js
+.next
+out
+
+# 开发工具
+.vscode
+.idea
+
+# 日志文件
+*.log
+
+# 临时文件
+tmp
+temp
+
+# 数据库文件
+*.db
+*.sqlite
+
+# SSL 证书
+ssl/
+*.pem
+*.key
+*.crt
+
+# 上传文件
+uploads/
+
+# Docker 相关
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# 部署脚本
+deploy.sh
+scripts/
+
+# 文档
+README.md
+DEPLOYMENT.md
+API.md

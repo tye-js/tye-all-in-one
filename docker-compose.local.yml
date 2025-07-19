@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine  # 从 Docker Hub 拉取
+    container_name: liveonchain-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: liveonchain_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - liveonchain-network
+
+
+  app:
+    build:  # 本地构建，不推送
+      context: .
+      dockerfile: Dockerfile
+    container_name: liveonchain-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/liveonchain_db
+      - NEXTAUTH_URL=https://liveonchain.com
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
+      - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./uploads:/app/public/uploads
+    networks:
+      - liveonchain-network
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx:alpine  # 从 Docker Hub 拉取
+    container_name: liveonchain-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - liveonchain-network
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  liveonchain-network:
+    driver: bridge
