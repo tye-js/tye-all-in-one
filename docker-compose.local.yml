@@ -18,24 +18,20 @@ services:
 
 
   app:
-    build:  # 本地构建，不推送
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: liveonchain-app
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/liveonchain_db
-      - NEXTAUTH_URL=https://liveonchain.com
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/liveonchain_db
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
       - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION}
     ports:
       - "3000:3000"
-    volumes:
-      - ./uploads:/app/public/uploads
-    networks:
-      - liveonchain-network
     depends_on:
       - postgres
 
