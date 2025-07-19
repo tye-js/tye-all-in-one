@@ -8,6 +8,9 @@ declare module 'next-auth' {
       name?: string;
       role: string;
       avatar?: string;
+      membershipTier?: string;
+      membershipExpiresAt?: string;
+      createdAt?: string;
     };
   }
 
@@ -17,6 +20,9 @@ declare module 'next-auth' {
     name?: string;
     role: string;
     avatar?: string;
+    membershipTier?: string;
+    membershipExpiresAt?: string;
+    createdAt?: string;
   }
 }
 
@@ -24,5 +30,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     role: string;
+    membershipTier?: string;
+    membershipExpiresAt?: string;
   }
 }

@@ -13,16 +13,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Menu, 
-  X, 
-  User, 
-  Settings, 
-  LogOut, 
+import {
+  Menu,
+  X,
+  User,
+  Settings,
+  LogOut,
   Shield,
   Home,
   FileText,
-  Volume2
+  Volume2,
+  Code
 } from 'lucide-react';
 
 // 简化的客户端 Header 组件 - 不依赖服务端会话
@@ -35,10 +36,11 @@ export default function SimpleHeader() {
     { name: 'Home', href: '/', icon: 'Home' },
     { name: 'Articles', href: '/articles', icon: 'FileText' },
     { name: 'TTS', href: '/tts', icon: 'Volume2' },
+    { name: 'SSML Editor', href: '/ssml-editor', icon: 'Code' },
   ];
 
   const getIcon = (iconName: string) => {
-    const iconMap = { Home, FileText, Volume2 };
+    const iconMap = { Home, FileText, Volume2, Code };
     const IconComponent = iconMap[iconName as keyof typeof iconMap];
     return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
   };

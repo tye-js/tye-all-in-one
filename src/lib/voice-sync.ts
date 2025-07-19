@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { ttsVoices } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getAzureConfig, getConfigStatusMessage, getConfigHelpMessage } from '@/lib/azure-config';
 
 interface AzureVoice {
   Name: string;
@@ -23,15 +24,17 @@ interface AzureVoice {
 }
 
 export class VoiceSyncService {
-  private subscriptionKey: string;
-  private region: string;
+  private config: ReturnType<typeof getAzureConfig>;
 
   constructor() {
-    this.subscriptionKey = process.env.AZURE_SPEECH_KEY || '';
-    this.region = process.env.AZURE_SPEECH_REGION || '';
-    
-    if (!this.subscriptionKey || !this.region) {
-      throw new Error('Azure Speech Service credentials not configured');
+    this.config = getAzureConfig();
+
+    if (!this.config.isConfigured) {
+      console.warn('⚠️ Azure Speech Service credentials not configured. Using fallback data.');
+      console.log(getConfigStatusMessage());
+      console.log(getConfigHelpMessage());
+    } else {
+      console.log(getConfigStatusMessage());
     }
   }
 
@@ -39,30 +42,169 @@ export class VoiceSyncService {
    * 从 Azure 获取所有可用语音
    */
   async fetchVoicesFromAzure(): Promise<AzureVoice[]> {
+    // 检查是否有有效的凭据
+    if (!this.config.isConfigured) {
+      console.warn('⚠️ Azure credentials not available, using fallback voices');
+      return this.getFallbackVoices();
+    }
+
     try {
+      console.log(`🔄 Fetching voices from Azure region: ${this.config.region}`);
+
       const response = await fetch(
-        `https://${this.region}.tts.speech.microsoft.com/cognitiveservices/voices/list`,
+        `${this.config.endpoint}/cognitiveservices/voices/list`,
         {
           method: 'GET',
           headers: {
-            'Ocp-Apim-Subscription-Key': this.subscriptionKey,
+            'Ocp-Apim-Subscription-Key': this.config.subscriptionKey,
           },
         }
       );
 
       if (!response.ok) {
-        throw new Error(`Azure API error: ${response.status} ${response.statusText}`);
+        console.error(`❌ Azure API error: ${response.status} ${response.statusText}`);
+
+        // 提供更详细的错误信息
+        if (response.status === 401) {
+          console.error('🔑 Authentication failed. Please check your AZURE_SPEECH_KEY.');
+        } else if (response.status === 403) {
+          console.error('🚫 Access forbidden. Please check your subscription and region.');
+        } else if (response.status === 404) {
+          console.error('🌍 Region not found. Please check your AZURE_SPEECH_REGION.');
+        }
+
+        console.log('🔄 Falling back to default voices...');
+        return this.getFallbackVoices();
       }
 
       const voices: AzureVoice[] = await response.json();
       console.log(`✅ Fetched ${voices.length} voices from Azure`);
-      console.log(voices);
-      
+
       return voices;
     } catch (error) {
       console.error('❌ Failed to fetch voices from Azure:', error);
-      throw error;
+      console.log('🔄 Falling back to default voices...');
+      return this.getFallbackVoices();
     }
+  }
+
+  /**
+   * 获取回退语音数据（当 Azure API 不可用时使用）
+   */
+  private getFallbackVoices(): AzureVoice[] {
+    return [
+      // 中文语音
+      {
+        Name: "Microsoft Server Speech Text to Speech Voice (zh-CN, XiaoxiaoNeural)",
+        DisplayName: "Xiaoxiao",
+        LocalName: "晓晓",
+        ShortName: "zh-CN-XiaoxiaoNeural",
+        Gender: "Female",
+        Locale: "zh-CN",
+        LocaleName: "Chinese (Mandarin, Simplified)",
+        StyleList: ["general", "assistant", "chat", "customerservice", "newscast", "affectionate", "angry", "calm", "cheerful", "disgruntled", "fearful", "gentle", "lyrical", "sad", "serious", "poetry-reading"],
+        SampleRateHertz: "24000",
+        VoiceType: "Neural",
+        Status: "GA",
+        VoiceTag: {
+          TailoredScenarios: ["General", "Assistant"],
+          VoicePersonalities: ["Friendly", "Positive"]
+        },
+        WordsPerMinute: "200"
+      },
+      {
+        Name: "Microsoft Server Speech Text to Speech Voice (zh-CN, YunxiNeural)",
+        DisplayName: "Yunxi",
+        LocalName: "云希",
+        ShortName: "zh-CN-YunxiNeural",
+        Gender: "Male",
+        Locale: "zh-CN",
+        LocaleName: "Chinese (Mandarin, Simplified)",
+        StyleList: ["general", "calm", "fearful", "cheerful", "disgruntled", "serious", "angry", "sad", "depressed", "embarrassed"],
+        SampleRateHertz: "24000",
+        VoiceType: "Neural",
+        Status: "GA",
+        VoiceTag: {
+          TailoredScenarios: ["General"],
+          VoicePersonalities: ["Reliable", "Positive"]
+        },
+        WordsPerMinute: "200"
+      },
+      // 英文语音
+      {
+        Name: "Microsoft Server Speech Text to Speech Voice (en-US, JennyNeural)",
+        DisplayName: "Jenny",
+        LocalName: "Jenny",
+        ShortName: "en-US-JennyNeural",
+        Gender: "Female",
+        Locale: "en-US",
+        LocaleName: "English (United States)",
+        StyleList: ["general", "assistant", "chat", "customerservice", "newscast", "angry", "cheerful", "sad", "excited", "friendly", "hopeful", "shouting", "terrified", "unfriendly", "whispering"],
+        SampleRateHertz: "24000",
+        VoiceType: "Neural",
+        Status: "GA",
+        VoiceTag: {
+          TailoredScenarios: ["General", "Assistant"],
+          VoicePersonalities: ["Friendly", "Pleasant"]
+        },
+        WordsPerMinute: "200"
+      },
+      {
+        Name: "Microsoft Server Speech Text to Speech Voice (en-US, GuyNeural)",
+        DisplayName: "Guy",
+        LocalName: "Guy",
+        ShortName: "en-US-GuyNeural",
+        Gender: "Male",
+        Locale: "en-US",
+        LocaleName: "English (United States)",
+        StyleList: ["general", "newscast", "angry", "cheerful", "sad", "excited", "friendly", "hopeful", "shouting", "terrified", "unfriendly", "whispering"],
+        SampleRateHertz: "24000",
+        VoiceType: "Neural",
+        Status: "GA",
+        VoiceTag: {
+          TailoredScenarios: ["General"],
+          VoicePersonalities: ["Warm", "Pleasant"]
+        },
+        WordsPerMinute: "200"
+      },
+      // 日文语音
+      {
+        Name: "Microsoft Server Speech Text to Speech Voice (ja-JP, NanamiNeural)",
+        DisplayName: "Nanami",
+        LocalName: "七海",
+        ShortName: "ja-JP-NanamiNeural",
+        Gender: "Female",
+        Locale: "ja-JP",
+        LocaleName: "Japanese (Japan)",
+        StyleList: ["general", "chat", "customerservice", "cheerful"],
+        SampleRateHertz: "24000",
+        VoiceType: "Neural",
+        Status: "GA",
+        VoiceTag: {
+          TailoredScenarios: ["General"],
+          VoicePersonalities: ["Friendly", "Pleasant"]
+        },
+        WordsPerMinute: "200"
+      },
+      {
+        Name: "Microsoft Server Speech Text to Speech Voice (ja-JP, KeitaNeural)",
+        DisplayName: "Keita",
+        LocalName: "圭太",
+        ShortName: "ja-JP-KeitaNeural",
+        Gender: "Male",
+        Locale: "ja-JP",
+        LocaleName: "Japanese (Japan)",
+        StyleList: ["general", "cheerful", "sad"],
+        SampleRateHertz: "24000",
+        VoiceType: "Neural",
+        Status: "GA",
+        VoiceTag: {
+          TailoredScenarios: ["General"],
+          VoicePersonalities: ["Reliable", "Pleasant"]
+        },
+        WordsPerMinute: "200"
+      }
+    ];
   }
 
   /**
@@ -94,9 +236,16 @@ export class VoiceSyncService {
   async syncVoicesToDatabase(): Promise<{ added: number; updated: number; total: number }> {
     try {
       console.log('🔄 Starting voice synchronization...');
-      
-      // 获取 Azure 语音列表
+
+      // 获取 Azure 语音列表（包含回退机制）
       const azureVoices = await this.fetchVoicesFromAzure();
+
+      if (azureVoices.length === 0) {
+        console.warn('⚠️ No voices available from Azure or fallback data');
+        return { added: 0, updated: 0, total: 0 };
+      }
+
+      console.log(`📝 Processing ${azureVoices.length} voices...`);
       
       let addedCount = 0;
       let updatedCount = 0;

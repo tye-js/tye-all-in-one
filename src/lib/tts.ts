@@ -37,6 +37,7 @@ export interface TTSOptions {
   audioEncoding?: 'MP3' | 'LINEAR16' | 'OGG_OPUS';
   speakingRate?: number;
   pitch?: number;
+  useSSML?: boolean; // 新增：是否直接使用 SSML
 }
 
 export interface TTSResult {
@@ -62,19 +63,28 @@ export async function synthesizeSpeech(options: TTSOptions): Promise<TTSResult> 
     audioEncoding = 'MP3',
     speakingRate = 1.0,
     pitch = 0.0,
+    useSSML = false,
   } = options;
 
   try {
-    // 构建 SSML
-    const ssml = `
-      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${languageCode}">
-        <voice name="${voiceName}">
-          <prosody rate="${speakingRate}" pitch="${pitch > 0 ? '+' : ''}${pitch}%">
-            ${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
-          </prosody>
-        </voice>
-      </speak>
-    `;
+    // 构建 SSML - 如果 useSSML 为 true，直接使用传入的文本作为 SSML
+    let ssml: string;
+
+    if (useSSML) {
+      // 直接使用传入的 SSML 代码
+      ssml = text;
+    } else {
+      // 构建标准 SSML
+      ssml = `
+        <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${languageCode}">
+          <voice name="${voiceName}">
+            <prosody rate="${speakingRate}" pitch="${pitch > 0 ? '+' : ''}${pitch}%">
+              ${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+            </prosody>
+          </voice>
+        </speak>
+      `;
+    }
 
     // 调用 Azure Speech Service API
     const response = await fetch(

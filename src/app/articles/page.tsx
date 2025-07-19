@@ -1,19 +1,36 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import MainLayout from '@/components/layout/main-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import SearchInput from '@/components/ui/search-input';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import EmptyState from '@/components/ui/empty-state';
-import Pagination from '@/components/ui/pagination';
-import { FileText, Calendar, User, Eye, Filter } from 'lucide-react';
+import { FileText, Calendar, User, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import Image from 'next/image';
+import { db } from '@/lib/db';
+import { articles, users } from '@/lib/db/schema';
+import { eq, desc } from 'drizzle-orm';
+import ArticlesFilters from '@/components/articles/articles-filters';
+
+export const metadata: Metadata = {
+  title: 'Articles | TYE All-in-One',
+  description: 'Discover the latest server deals, AI tool updates, and industry insights. Browse our comprehensive collection of articles.',
+  keywords: ['articles', 'server deals', 'AI tools', 'technology', 'blog', 'insights'],
+  openGraph: {
+    title: 'Articles | TYE All-in-One',
+    description: 'Discover the latest server deals, AI tool updates, and industry insights. Browse our comprehensive collection of articles.',
+    type: 'website',
+    url: '/articles',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Articles | TYE All-in-One',
+    description: 'Discover the latest server deals, AI tool updates, and industry insights.',
+  },
+  alternates: {
+    canonical: '/articles',
+  },
+};
 
 interface Article {
   id: string;
@@ -25,81 +42,90 @@ interface Article {
   category: string;
   publishedAt: string;
   viewCount: number;
-  createdAt: string;
   author: {
     id: string;
     name: string;
     email: string;
     avatar?: string;
   };
-  categoryInfo?: {
-    id: string;
-    name: string;
-    slug: string;
-    color: string;
-  };
 }
 
-interface ArticlesResponse {
-  articles: Article[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+// 服务端获取文章列表
+async function getArticles(
+  searchParams: { [key: string]: string | string[] | undefined }
+): Promise<{ articles: Article[]; total: number }> {
+  try {
+    const q = searchParams.query as string;
+    const page = Number(searchParams.page) || 1;
+    const limit = Number(searchParams.limit) || 12;
+    const category = searchParams.category as string;
+    const sortBy = (searchParams.sortBy as string) || 'publishedAt';
+    const sortOrder = (searchParams.sortOrder as string) || 'desc';
 
-export default function ArticlesPage() {
-  const searchParams = useSearchParams();
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 12,
-    total: 0,
-    totalPages: 0,
-  });
+    let query = db
+      .select({
+        id: articles.id,
+        title: articles.title,
+        slug: articles.slug,
+        excerpt: articles.excerpt,
+        featuredImage: articles.featuredImage,
+        status: articles.status,
+        category: articles.category,
+        publishedAt: articles.publishedAt,
+        viewCount: articles.viewCount,
+        author: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          avatar: users.avatar,
+        },
+      })
+      .from(articles)
+      .leftJoin(users, eq(articles.authorId, users.id))
+      .where(eq(articles.status, 'published'));
+    
+    // 添加搜索过滤
 
-  // Search and filter states
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'publishedAt');
-  const [sortOrder, setSortOrder] = useState(searchParams.get('sortOrder') || 'desc');
-
-  const fetchArticles = async (page = 1) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: pagination.limit.toString(),
-        status: 'published',
-        ...(searchQuery && { q: searchQuery }),
-        ...(selectedCategory !== 'all' && { category: selectedCategory }),
-        sortBy,
-        sortOrder,
-      });
-
-      const response = await fetch(`/api/articles?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch articles');
-
-      const data: ArticlesResponse = await response.json();
-      setArticles(data.articles);
-      setPagination(data.pagination);
-    } catch (error) {
-      console.error('Error fetching articles:', error);
-    } finally {
-      setLoading(false);
+    // 添加分类过滤
+    if (category && category !== 'all') {
+      query = query.where(eq(articles.category, category));
     }
-  };
 
-  useEffect(() => {
-    fetchArticles(1);
-  }, [searchQuery, selectedCategory, sortBy, sortOrder]);
+    // 添加排序
+    const orderColumn = sortBy === 'title' ? articles.title :
+                       sortBy === 'viewCount' ? articles.viewCount :
+                       articles.publishedAt;
 
-  const handlePageChange = (page: number) => {
-    fetchArticles(page);
-  };
+    const orderDirection = sortOrder === 'asc' ? orderColumn : desc(orderColumn);
+
+    const result = await query
+      .orderBy(orderDirection)
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    // 获取总数
+    const totalResult = await db
+      .select({ count: articles.id })
+      .from(articles)
+      .where(eq(articles.status, 'published'));
+
+    return {
+      articles: result as Article[],
+      total: totalResult.length,
+    };
+  } catch (error) {
+    console.error('Error fetching articles:', error);
+    return { articles: [], total: 0 };
+  }
+}
+
+export default async function ArticlesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const { articles: articlesList, total } = await getArticles(params);
 
   const getCategoryColor = (category: string) => {
     const colors = {
@@ -130,80 +156,32 @@ export default function ArticlesPage() {
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <SearchInput
-                placeholder="Search articles..."
-                value={searchQuery}
-                onChange={setSearchQuery}
-                className="w-full"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="server_deals">Server Deals</SelectItem>
-                  <SelectItem value="ai_tools">AI Tools</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Filters - 客户端组件用于交互 */}
+        <Suspense fallback={<div className="mb-8 h-16 bg-gray-100 rounded animate-pulse" />}>
+          <ArticlesFilters />
+        </Suspense>
 
-              <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {
-                const [newSortBy, newSortOrder] = value.split('-');
-                setSortBy(newSortBy);
-                setSortOrder(newSortOrder);
-              }}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="publishedAt-desc">Latest First</SelectItem>
-                  <SelectItem value="publishedAt-asc">Oldest First</SelectItem>
-                  <SelectItem value="title-asc">Title A-Z</SelectItem>
-                  <SelectItem value="title-desc">Title Z-A</SelectItem>
-                  <SelectItem value="viewCount-desc">Most Viewed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Articles Grid - 服务端渲染 */}
+        {articlesList.length === 0 ? (
+          <div className="text-center py-12">
+            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No articles found</h3>
+            <p className="text-gray-600">
+              Try adjusting your search criteria or check back later for new content.
+            </p>
           </div>
-        </div>
-
-        {/* Content */}
-        {loading ? (
-          <LoadingSpinner className="py-12" text="Loading articles..." />
-        ) : articles.length === 0 ? (
-          <EmptyState
-            icon={<FileText className="w-12 h-12" />}
-            title="No articles found"
-            description="Try adjusting your search criteria or check back later for new content."
-            action={{
-              label: 'Clear Filters',
-              onClick: () => {
-                setSearchQuery('');
-                setSelectedCategory('all');
-                setSortBy('publishedAt');
-                setSortOrder('desc');
-              },
-            }}
-          />
         ) : (
           <>
-            {/* Articles Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {articles.map((article) => (
+              {articlesList.map((article) => (
                 <Card key={article.id} className="hover:shadow-lg transition-shadow">
                   {article.featuredImage && (
                     <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
                       <Image
                         src={article.featuredImage}
                         alt={article.title}
+                        width={400}
+                        height={225}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -219,7 +197,7 @@ export default function ArticlesPage() {
                       </div>
                     </div>
                     <CardTitle className="line-clamp-2">
-                      <Link 
+                      <Link
                         href={`/articles/${article.slug}`}
                         className="hover:text-blue-600 transition-colors"
                       >
@@ -246,15 +224,10 @@ export default function ArticlesPage() {
               ))}
             </div>
 
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                onPageChange={handlePageChange}
-                className="justify-center"
-              />
-            )}
+            {/* Pagination - 客户端组件用于交互 */}
+            <Suspense fallback={<div className="h-12 bg-gray-100 rounded animate-pulse" />}>
+              <div className="pagination-placeholder" data-total={total} />
+            </Suspense>
           </>
         )}
       </div>

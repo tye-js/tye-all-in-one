@@ -4,9 +4,6 @@ import { voiceSyncService } from '@/lib/voice-sync';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const language = searchParams.get('language');
-    console.log(language)
     // 检查是否需要同步语音（如果数据库为空）
     const shouldSync = await voiceSyncService.shouldSync(24);
     if (shouldSync) {

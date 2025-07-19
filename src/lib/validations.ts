@@ -58,6 +58,7 @@ export const ttsRequestSchema = z.object({
   voice: z.string().default('en-US-Standard-A'),
   speakingRate: z.number().min(0.25).max(4.0).optional(),
   pitch: z.number().min(-20.0).max(20.0).optional(),
+  useSSML: z.boolean().optional().default(false),
 });
 
 // Search schemas

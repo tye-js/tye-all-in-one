@@ -3,6 +3,7 @@ import { relations } from 'drizzle-orm';
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin']);
+export const membershipTierEnum = pgEnum('membership_tier', ['free', 'pro', 'premium']);
 export const articleStatusEnum = pgEnum('article_status', ['draft', 'published', 'archived']);
 export const articleCategoryEnum = pgEnum('article_category', ['server_deals', 'ai_tools', 'general']);
 export const ttsStatusEnum = pgEnum('tts_status', ['pending', 'processing', 'completed', 'failed']);
@@ -14,6 +15,8 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 255 }),
   password: text('password'),
   role: userRoleEnum('role').default('user').notNull(),
+  membershipTier: membershipTierEnum('membership_tier').default('free').notNull(),
+  membershipExpiresAt: timestamp('membership_expires_at'),
   avatar: text('avatar'),
   emailVerified: timestamp('email_verified'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

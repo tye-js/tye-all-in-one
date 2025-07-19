@@ -196,6 +196,32 @@ jobs:
         key: ${{ secrets.PRODUCTION_SSH_KEY }}
         script: |
           cd /opt/tye-all-in-one
+          
+          # 拉取最新代码
+          if [ ! -d ".git" ]; then
+            git clone https://github.com/${{ github.repository }} .
+          else
+            git fetch origin
+            git reset --hard origin/main
+          fi
+          
+          # 创建环境文件（如果不存在）
+          if [ ! -f ".env" ]; then
+            cp .env.example .env
+          fi
+          
+          # 拉取最新镜像
           docker-compose pull
+          
+          # 重新部署
+          docker-compose down
           docker-compose up -d
+          
+          # 等待服务启动
+          sleep 30
+          
+          # 运行数据库迁移
+          docker-compose exec -T app npm run db:push
+          
+          # 清理旧镜像
           docker system prune -f

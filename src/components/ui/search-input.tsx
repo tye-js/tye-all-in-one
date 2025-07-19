@@ -10,7 +10,6 @@ interface SearchInputProps {
   placeholder?: string;
   value?: string;
   onChange?: (value: string) => void;
-  onSearch?: (value: string) => void;
   onClear?: () => void;
   className?: string;
   debounceMs?: number;
@@ -20,31 +19,29 @@ export default function SearchInput({
   placeholder = 'Search...',
   value = '',
   onChange,
-  onSearch,
   onClear,
   className,
-  debounceMs = 300,
 }: SearchInputProps) {
   const [searchValue, setSearchValue] = useState(value);
 
   // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (onChange) {
-        onChange(searchValue);
-      }
-    }, debounceMs);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     if (onChange) {
+  //       onChange(searchValue);
+  //     }
+  //   }, debounceMs);
 
-    return () => clearTimeout(timer);
-  }, [searchValue, onChange, debounceMs]);
+  //   return () => clearTimeout(timer);
+  // }, [searchValue, onChange, debounceMs]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
 
   const handleSearch = () => {
-    if (onSearch) {
-      onSearch(searchValue);
+    if (onChange) {
+      onChange(searchValue);
     }
   };
 
@@ -73,7 +70,7 @@ export default function SearchInput({
           placeholder={placeholder}
           value={searchValue}
           onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           className="pl-10 pr-10"
         />
         {searchValue && (

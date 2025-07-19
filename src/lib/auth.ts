@@ -44,6 +44,9 @@ export const authOptions: NextAuthOptions = {
             name: user[0].name || undefined,
             role: user[0].role,
             avatar: user[0].avatar || undefined,
+            membershipTier: user[0].membershipTier || 'free',
+            membershipExpiresAt: user[0].membershipExpiresAt?.toISOString(),
+            createdAt: user[0].createdAt?.toISOString(),
           };
         } catch (error) {
           console.error('Auth error:', error);
@@ -56,17 +59,47 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
+        token.membershipTier = user.membershipTier;
+        token.membershipExpiresAt = user.membershipExpiresAt;
       }
+
+      // 处理会话更新
+      if (trigger === 'update' && session) {
+        // 重新从数据库获取用户信息
+        try {
+          const updatedUser = await db
+            .select({
+              id: users.id,
+              role: users.role,
+              membershipTier: users.membershipTier,
+              membershipExpiresAt: users.membershipExpiresAt,
+            })
+            .from(users)
+            .where(eq(users.id, token.id as string))
+            .limit(1);
+
+          if (updatedUser.length > 0) {
+            token.role = updatedUser[0].role;
+            token.membershipTier = updatedUser[0].membershipTier;
+            token.membershipExpiresAt = updatedUser[0].membershipExpiresAt;
+          }
+        } catch (error) {
+          console.error('Error updating session:', error);
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.membershipTier = token.membershipTier as string;
+        session.user.membershipExpiresAt = token.membershipExpiresAt as string;
       }
       return session;
     },

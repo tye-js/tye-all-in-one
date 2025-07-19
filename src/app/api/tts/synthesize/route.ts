@@ -5,19 +5,50 @@ import { db } from '@/lib/db';
 import { ttsRequests } from '@/lib/db/schema';
 import { ttsRequestSchema } from '@/lib/validations';
 import { synthesizeSpeech } from '@/lib/tts';
+import { getMembershipInfo } from '@/lib/membership';
+import { checkUsageLimits, trackTTSUsage } from '@/lib/usage-tracking';
 import { eq } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = ttsRequestSchema.parse(body);
+
+    // 检查会员权限和使用限制
+    const membershipInfo = getMembershipInfo(session.user);
+    const charactersCount = validatedData.text.length;
+
+    const usageCheck = await checkUsageLimits(
+      session.user.id,
+      charactersCount,
+      membershipInfo.features
+    );
+
+    if (!usageCheck.canUse) {
+      return NextResponse.json(
+        {
+          error: usageCheck.reason,
+          usage: usageCheck.usage,
+          membershipTier: membershipInfo.tier
+        },
+        { status: 429 } // Too Many Requests
+      );
+    }
 
     // Create TTS request record
     const ttsRequest = await db
       .insert(ttsRequests)
       .values({
-        userId: session?.user?.id || null,
+        userId: session.user.id,
         text: validatedData.text,
         language: validatedData.language,
         voice: validatedData.voice,
@@ -33,6 +64,7 @@ export async function POST(request: NextRequest) {
         voiceName: validatedData.voice,
         speakingRate: validatedData.speakingRate,
         pitch: validatedData.pitch,
+        useSSML: validatedData.useSSML,
       });
 
       // Update request with success
@@ -47,6 +79,9 @@ export async function POST(request: NextRequest) {
         })
         .where(eq(ttsRequests.id, ttsRequest[0].id))
         .returning();
+
+      // 记录使用统计
+      await trackTTSUsage(session.user.id, charactersCount);
 
       return NextResponse.json({
         id: updatedRequest[0].id,

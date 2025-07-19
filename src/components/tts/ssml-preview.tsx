@@ -1,15 +1,24 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Code } from 'lucide-react';
-import { TTSSettings } from './types';
+import { TTSSettings, Voice } from './types';
+import { getMembershipInfo, hasFeatureAccess } from '@/lib/membership';
+import { SSMLProGuard } from '@/components/membership/membership-guard';
+import SSMLProEditor from './ssml-pro-editor';
 
 interface SSMLPreviewProps {
   text: string;
   settings: TTSSettings;
+  voices: Voice[];
+  onSettingsChange: (settings: Partial<TTSSettings>) => void;
 }
 
-export default function SSMLPreview({ text, settings }: SSMLPreviewProps) {
+export default function SSMLPreview({ text, settings, voices, onSettingsChange }: SSMLPreviewProps) {
+  const { data: session } = useSession();
+  const membershipInfo = getMembershipInfo(session?.user);
+  const hasProAccess = hasFeatureAccess(membershipInfo, 'ssmlAdvanced');
   // Generate SSML preview
   const generateSSMLPreview = (): string => {
     if (!settings.useSSML || !text.trim()) return text;
@@ -56,24 +65,45 @@ export default function SSMLPreview({ text, settings }: SSMLPreviewProps) {
     return null;
   }
 
+  // 如果用户有 Pro 权限，显示 Pro 编辑器
+  if (hasProAccess) {
+    return (
+      <SSMLProEditor
+        text={text}
+        settings={settings}
+        voices={voices}
+        onSettingsChange={onSettingsChange}
+      />
+    );
+  }
+
+  // 否则显示基础预览和升级提示
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Code className="w-5 h-5 mr-2" />
-          SSML Preview
-        </CardTitle>
-        <CardDescription>
-          Generated SSML markup for your text
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="bg-gray-50 rounded-lg p-4 overflow-x-auto">
-          <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-            {generateSSMLPreview()}
-          </pre>
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      {/* 基础 SSML 预览 */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Code className="w-5 h-5 mr-2" />
+            SSML Preview
+          </CardTitle>
+          <CardDescription>
+            Generated SSML markup for your text
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-gray-50 rounded-lg p-4 overflow-x-auto">
+            <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+              {generateSSMLPreview()}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pro 功能升级提示 */}
+      <SSMLProGuard>
+        <div />
+      </SSMLProGuard>
+    </>
   );
 }

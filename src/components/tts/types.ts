@@ -48,3 +48,47 @@ export interface TTSFormData {
   emotionIntensity?: number;
   useSSML?: boolean;
 }
+
+// SSML Pro 编辑器相关类型
+export interface SSMLSegment {
+  id: string;
+  text: string;
+  voice?: string;
+  style?: string;
+  rate?: string | number;
+  pitch?: string | number;
+  volume?: string | number;
+  breakTime?: string;
+  startIndex: number;
+  endIndex: number;
+}
+
+export interface SSMLProSettings {
+  segments: SSMLSegment[];
+  globalVoice: string;
+  globalLanguage: string;
+}
+
+export interface VoiceStyle {
+  name: string;
+  displayName: string;
+  description: string;
+}
+
+export interface SSMLTag {
+  name: string;
+  displayName: string;
+  description: string;
+  attributes: SSMLAttribute[];
+  example: string;
+}
+
+export interface SSMLAttribute {
+  name: string;
+  type: 'string' | 'number' | 'select';
+  options?: string[];
+  min?: number;
+  max?: number;
+  default?: string | number;
+  description: string;
+}
