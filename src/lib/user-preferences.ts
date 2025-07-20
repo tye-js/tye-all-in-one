@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react';
-import { type Locale } from '@/lib/i18n';
+import { type Locale } from '@/lib/i18n/types';
 
 // 用户偏好设置接口
 export interface UserPreferences {

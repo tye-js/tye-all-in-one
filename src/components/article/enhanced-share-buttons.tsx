@@ -83,7 +83,7 @@ export default function EnhancedShareButtons({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        {navigator.share && (
+        {typeof navigator !== 'undefined' && 'share' in navigator && typeof navigator.share === 'function' && (
           <>
             <DropdownMenuItem onClick={handleNativeShare}>
               <Share2 className="w-4 h-4 mr-2" />

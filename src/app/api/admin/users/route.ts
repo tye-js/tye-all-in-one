@@ -20,7 +20,7 @@ export async function GET() {
         email: users.email,
         name: users.name,
         role: users.role,
-        avatar: users.image,
+        avatar: users.avatar,
         emailVerified: users.emailVerified,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,

@@ -14,7 +14,7 @@ import { localeConfig, type Locale } from '@/lib/i18n/types';
 
 interface LanguageSwitcherProps {
   variant?: 'default' | 'ghost' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'lg';
   showFlag?: boolean;
   showText?: boolean;
   className?: string;
@@ -104,7 +104,7 @@ export function LanguageSwitcherFull({ className = '' }: { className?: string })
   return (
     <LanguageSwitcher
       variant="outline"
-      size="md"
+      size="lg"
       showFlag={true}
       showText={true}
       className={className}

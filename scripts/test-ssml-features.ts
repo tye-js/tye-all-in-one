@@ -2,7 +2,7 @@
 console.log('🧪 Testing SSML Features...\n');
 
 // 模拟 SSML 生成函数
-function generateSSMLPreview(options: {
+function generateSSMLPreviewForFeatureTest(options: {
   text: string;
   selectedLanguage: string;
   selectedVoice: string;
@@ -170,7 +170,7 @@ testCases.forEach((testCase, index) => {
   console.log(`📋 Test ${index + 1}: ${testCase.name}`);
   console.log('Input:', JSON.stringify(testCase.options, null, 2));
   
-  const result = generateSSMLPreview(testCase.options);
+  const result = generateSSMLPreviewForFeatureTest(testCase.options);
   
   console.log('Generated SSML:');
   console.log('```xml');
@@ -263,7 +263,7 @@ const edgeCases = [
 
 edgeCases.forEach((testCase, index) => {
   console.log(`🔍 Edge Case ${index + 1}: ${testCase.name}`);
-  const result = generateSSMLPreview(testCase.options);
+  const result = generateSSMLPreviewForFeatureTest(testCase.options);
   console.log('Result:', result);
   console.log('---\n');
 });

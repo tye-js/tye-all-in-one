@@ -57,9 +57,9 @@ async function testStructuredQuery() {
     console.log(`✅ Chinese query: ${chineseResult.length} locales in ${endTime2 - startTime2}ms`);
     
     if (chineseResult.length > 0) {
-      const chineseLocale = chineseResult[0];
+      const chineseLocale = chineseResult[0] as any;
       console.log(`📋 Chinese voices (${chineseLocale.locale}): ${chineseLocale.voices.length} voices`);
-      
+
       // 显示前5个中文语音
       chineseLocale.voices.slice(0, 5).forEach((voice: any) => {
         console.log(`   • ${voice.displayName} (${voice.localName}) - ${voice.gender}`);
@@ -93,7 +93,7 @@ async function testStructuredQuery() {
     console.log(`✅ Active Chinese query: ${activeChineseResult.length} locales in ${endTime4 - startTime4}ms`);
     
     if (activeChineseResult.length > 0) {
-      const activeChineseLocale = activeChineseResult[0];
+      const activeChineseLocale = activeChineseResult[0] as any;
       console.log(`📋 Active Chinese voices: ${activeChineseLocale.voices.length} voices`);
     }
 
@@ -106,11 +106,11 @@ async function testStructuredQuery() {
     console.log(`✅ English query: ${englishResult.length} locales in ${endTime5 - startTime5}ms`);
     
     if (englishResult.length > 0) {
-      const englishLocale = englishResult[0];
+      const englishLocale = englishResult[0] as any;
       console.log(`📋 English voices: ${englishLocale.voices.length} voices`);
-      
+
       // 显示有风格的英文语音
-      const englishVoicesWithStyles = englishLocale.voices.filter((voice: any) => 
+      const englishVoicesWithStyles = englishLocale.voices.filter((voice: any) =>
         voice.styleList && Array.isArray(voice.styleList) && voice.styleList.length > 0
       );
       
@@ -132,9 +132,9 @@ async function testStructuredQuery() {
     console.log(`✅ German query: ${germanResult.length} locales in ${endTime6 - startTime6}ms`);
     
     if (germanResult.length > 0) {
-      const germanLocale = germanResult[0];
+      const germanLocale = germanResult[0] as any;
       console.log(`📋 German voices: ${germanLocale.voices.length} voices`);
-      
+
       germanLocale.voices.forEach((voice: any) => {
         console.log(`   • ${voice.displayName} (${voice.localName}) - ${voice.gender}`);
         if (voice.styleList && Array.isArray(voice.styleList) && voice.styleList.length > 0) {
@@ -156,11 +156,11 @@ async function testStructuredQuery() {
     console.log('\n🔍 Data Structure Validation:');
     
     if (allLocales.length > 0) {
-      const sampleLocale = allLocales[0];
+      const sampleLocale = allLocales[0] as any;
       console.log(`✅ Locale structure: { locale: "${sampleLocale.locale}", voices: Array(${sampleLocale.voices.length}) }`);
-      
+
       if (sampleLocale.voices.length > 0) {
-        const sampleVoice = sampleLocale.voices[0];
+        const sampleVoice = sampleLocale.voices[0] as any;
         console.log('✅ Voice structure includes:');
         console.log(`   • name: ${sampleVoice.name}`);
         console.log(`   • displayName: ${sampleVoice.displayName}`);

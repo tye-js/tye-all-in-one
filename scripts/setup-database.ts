@@ -28,13 +28,16 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
+// TypeScript 类型断言，确保 DATABASE_URL 不是 undefined
+const dbUrl: string = DATABASE_URL;
+
 console.log('🔗 Connecting to database...');
 console.log('📍 Database URL:', DATABASE_URL.replace(/:[^:@]*@/, ':****@'));
 
 async function setupDatabase() {
   try {
     // 连接数据库
-    const client = postgres(DATABASE_URL!, { prepare: false });
+    const client = postgres(dbUrl, { prepare: false });
     const db = drizzle(client);
 
     console.log('✅ Database connection established');

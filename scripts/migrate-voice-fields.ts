@@ -31,11 +31,14 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
+// TypeScript 类型断言，确保 DATABASE_URL 不是 undefined
+const dbUrl: string = DATABASE_URL;
+
 async function migrateVoiceFields() {
   try {
     console.log('🔧 Migrating TTS voices table to add new fields...\n');
     
-    const client = postgres(DATABASE_URL!, { prepare: false });
+    const client = postgres(dbUrl, { prepare: false });
 
     console.log('📊 Adding new columns to tts_voices table...');
     

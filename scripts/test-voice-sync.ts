@@ -26,12 +26,13 @@ async function testVoiceSync() {
     
     // 动态导入服务
     const { voiceSyncService } = await import('../src/lib/voice-sync');
-    const { listVoices, getSupportedLanguages, getVoicesForLanguage, getVoicesByLanguage } = await import('../src/lib/tts');
+    const { getSupportedLanguages, getVoicesForLanguage, getVoicesByLanguage } = await import('../src/lib/tts');
 
     // 1. 测试数据库中的语音数量
     console.log('📊 Testing voice database...');
-    const allVoices = await listVoices();
-    console.log(`✅ Total voices in database: ${allVoices.length}`);
+    const allVoices = await getVoicesByLanguage();
+    const totalVoices = Object.values(allVoices).reduce((sum: number, voices: any) => sum + voices.length, 0);
+    console.log(`✅ Total voices in database: ${totalVoices}`);
 
     // 2. 测试支持的语言
     console.log('\n🌍 Testing supported languages...');
@@ -105,7 +106,8 @@ async function testVoiceSync() {
     console.log(`✅ Should sync (24h check): ${shouldSync ? 'Yes' : 'No'}`);
     
     // 获取最新同步时间
-    const sampleVoice = allVoices[0];
+    const allVoicesArray = Object.values(allVoices).flat();
+    const sampleVoice = allVoicesArray[0];
     if (sampleVoice) {
       console.log(`📅 Last sync: ${new Date(sampleVoice.lastSyncAt).toLocaleString()}`);
     }
@@ -126,14 +128,14 @@ async function testVoiceSync() {
     console.log(`   🇺🇸 English voices: ${englishVoices.length}`);
     
     // 计算性别分布
-    const maleVoices = allVoices.filter(v => v.gender === 'Male').length;
-    const femaleVoices = allVoices.filter(v => v.gender === 'Female').length;
+    const maleVoices = allVoicesArray.filter((v: any) => v.gender === 'Male').length;
+    const femaleVoices = allVoicesArray.filter((v: any) => v.gender === 'Female').length;
     console.log(`   👨 Male voices: ${maleVoices}`);
     console.log(`   👩 Female voices: ${femaleVoices}`);
-    
+
     // 计算类型分布
-    const neuralVoices = allVoices.filter(v => v.voiceType === 'Neural').length;
-    const standardVoices = allVoices.filter(v => v.voiceType === 'Standard').length;
+    const neuralVoices = allVoicesArray.filter((v: any) => v.voiceType === 'Neural').length;
+    const standardVoices = allVoicesArray.filter((v: any) => v.voiceType === 'Standard').length;
     console.log(`   🧠 Neural voices: ${neuralVoices}`);
     console.log(`   📢 Standard voices: ${standardVoices}`);
 

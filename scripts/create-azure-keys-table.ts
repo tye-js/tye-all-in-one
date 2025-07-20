@@ -30,11 +30,14 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
+// TypeScript 类型断言，确保 DATABASE_URL 不是 undefined
+const dbUrl: string = DATABASE_URL;
+
 async function createAzureKeysTable() {
   try {
     console.log('🔧 Creating Azure Keys table...\n');
     
-    const client = postgres(DATABASE_URL!, { prepare: false });
+    const client = postgres(dbUrl, { prepare: false });
 
     // 创建 Azure Keys 表
     await client`

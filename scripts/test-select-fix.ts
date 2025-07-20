@@ -32,7 +32,7 @@ function createTTSFormData(text: string, settings: TTSSettings) {
 }
 
 // 模拟 SSML 生成函数
-function generateSSMLPreview(text: string, settings: TTSSettings): string {
+function generateSSMLPreviewForTest(text: string, settings: TTSSettings): string {
   if (!settings.useSSML || !text.trim()) return text;
 
   let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${settings.selectedLanguage}">`;
@@ -74,7 +74,7 @@ function generateSSMLPreview(text: string, settings: TTSSettings): string {
 }
 
 // 测试用例
-const testCases = [
+const selectFixTestCases = [
   {
     name: '默认风格 (空字符串)',
     settings: {
@@ -151,7 +151,7 @@ const testText = '今天天气真好，心情特别愉快！';
 
 console.log('🎯 Running Select Fix Tests...\n');
 
-testCases.forEach((testCase, index) => {
+selectFixTestCases.forEach((testCase, index) => {
   console.log(`📋 Test ${index + 1}: ${testCase.name}`);
   console.log(`Input style: "${testCase.settings.selectedStyle}"`);
   
@@ -160,7 +160,7 @@ testCases.forEach((testCase, index) => {
   console.log(`Form data style: "${formData.style}"`);
   
   // 测试 SSML 生成
-  const ssml = generateSSMLPreview(testText, testCase.settings);
+  const ssml = generateSSMLPreviewForTest(testText, testCase.settings);
   console.log('Generated SSML:');
   console.log(ssml);
   

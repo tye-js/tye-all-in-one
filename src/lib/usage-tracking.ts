@@ -73,8 +73,8 @@ export async function getUserUsageStats(
       WHERE user_id = ${userId} AND month_year = ${monthYear}
     `);
 
-    const daily = dailyUsage.rows[0] || { requests_made: 0, characters_used: 0 };
-    const monthly = monthlyUsage.rows[0] || { requests_made: 0, characters_used: 0 };
+    const daily = dailyUsage[0] || { requests_made: 0, characters_used: 0 };
+    const monthly = monthlyUsage[0] || { requests_made: 0, characters_used: 0 };
 
     return {
       charactersUsed: Number(daily.characters_used),
@@ -155,7 +155,7 @@ export async function getUserUsageHistory(
       LIMIT ${months}
     `);
 
-    return result.rows.map(row => ({
+    return result.map(row => ({
       monthYear: row.month_year as string,
       charactersUsed: Number(row.characters_used),
       requestsMade: Number(row.requests_made),
@@ -231,11 +231,11 @@ export async function getSystemUsageStats(): Promise<{
       `),
     ]);
 
-    const daily = dailyStats.rows[0] || { active_users: 0, total_requests: 0, total_characters: 0 };
-    const monthly = monthlyStats.rows[0] || { total_requests: 0, total_characters: 0 };
+    const daily = dailyStats[0] || { active_users: 0, total_requests: 0, total_characters: 0 };
+    const monthly = monthlyStats[0] || { total_requests: 0, total_characters: 0 };
 
     return {
-      totalUsers: Number(totalUsers.rows[0]?.count || 0),
+      totalUsers: Number(totalUsers[0]?.count || 0),
       activeUsersToday: Number(daily.active_users),
       totalRequestsToday: Number(daily.total_requests),
       totalCharactersToday: Number(daily.total_characters),

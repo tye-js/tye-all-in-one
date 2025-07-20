@@ -257,7 +257,7 @@ export default async function Home() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-sm text-gray-500">
-                        {new Date(article.publishedAt).toLocaleDateString()}
+                        {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : '未发布'}
                       </div>
                     </CardContent>
                   </Card>

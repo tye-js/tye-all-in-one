@@ -37,6 +37,13 @@ export async function GET(request: NextRequest) {
 
     const currentPublishedAt = currentArticle[0].publishedAt;
 
+    if (!currentPublishedAt) {
+      return NextResponse.json(
+        { error: 'Article has no published date' },
+        { status: 400 }
+      );
+    }
+
     // 构建查询条件
     const baseConditions = [eq(articles.status, 'published')];
     if (category && category !== 'all') {

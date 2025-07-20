@@ -82,6 +82,10 @@ async function getArticleBySlug(slug: string): Promise<Article | null> {
 
     return {
       ...articleResult[0],
+      publishedAt: articleResult[0].publishedAt?.toISOString() || '',
+      createdAt: articleResult[0].createdAt.toISOString(),
+      updatedAt: articleResult[0].updatedAt.toISOString(),
+      processedAt: articleResult[0].processedAt?.toISOString() || null,
       tags: articleTagsResult.filter(tag => tag.id !== null),
     } as Article;
   } catch (error) {
@@ -111,14 +115,18 @@ async function getRelatedArticles(category: string, currentSlug: string, limit =
       .leftJoin(users, eq(articles.authorId, users.id))
       .where(and(
         eq(articles.status, 'published'),
-        eq(articles.category, category)
+        eq(articles.category, category as any)
       ))
       .orderBy(desc(articles.publishedAt))
       .limit(limit + 1); // 多获取一个，然后过滤掉当前文章
 
     return relatedResult
       .filter(article => article.slug !== currentSlug)
-      .slice(0, limit) as RelatedArticle[];
+      .slice(0, limit)
+      .map(article => ({
+        ...article,
+        publishedAt: article.publishedAt?.toISOString() || '',
+      })) as RelatedArticle[];
   } catch (error) {
     console.error('Error fetching related articles:', error);
     return [];
@@ -146,6 +154,10 @@ async function getArticleNavigation(currentSlug: string, category: string) {
 
     const currentPublishedAt = currentArticle[0].publishedAt;
 
+    if (!currentPublishedAt) {
+      return { prev: null, next: null };
+    }
+
     // 获取上一篇文章
     const prevArticle = await db
       .select({
@@ -157,7 +169,7 @@ async function getArticleNavigation(currentSlug: string, category: string) {
       .from(articles)
       .where(and(
         eq(articles.status, 'published'),
-        eq(articles.category, category),
+        eq(articles.category, category as any),
         lt(articles.publishedAt, currentPublishedAt)
       ))
       .orderBy(desc(articles.publishedAt))
@@ -174,7 +186,7 @@ async function getArticleNavigation(currentSlug: string, category: string) {
       .from(articles)
       .where(and(
         eq(articles.status, 'published'),
-        eq(articles.category, category),
+        eq(articles.category, category as any),
         gt(articles.publishedAt, currentPublishedAt)
       ))
       .orderBy(asc(articles.publishedAt))

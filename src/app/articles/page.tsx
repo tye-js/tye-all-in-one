@@ -9,7 +9,7 @@ import { FileText, Calendar, User, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { db } from '@/lib/db';
 import { articles, users } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import ArticlesFilters from '@/components/articles/articles-filters';
 
 export const metadata: Metadata = {
@@ -62,7 +62,15 @@ async function getArticles(
     const sortBy = (searchParams.sortBy as string) || 'publishedAt';
     const sortOrder = (searchParams.sortOrder as string) || 'desc';
 
-    let query = db
+    // 构建查询条件
+    const conditions = [eq(articles.status, 'published')];
+
+    // 添加分类过滤
+    if (category && category !== 'all') {
+      conditions.push(eq(articles.category, category as any));
+    }
+
+    const query = db
       .select({
         id: articles.id,
         title: articles.title,
@@ -82,14 +90,9 @@ async function getArticles(
       })
       .from(articles)
       .leftJoin(users, eq(articles.authorId, users.id))
-      .where(eq(articles.status, 'published'));
-    
-    // 添加搜索过滤
+      .where(and(...conditions));
 
-    // 添加分类过滤
-    if (category && category !== 'all') {
-      query = query.where(eq(articles.category, category));
-    }
+    // 添加搜索过滤
 
     // 添加排序
     const orderColumn = sortBy === 'title' ? articles.title :
@@ -107,10 +110,13 @@ async function getArticles(
     const totalResult = await db
       .select({ count: articles.id })
       .from(articles)
-      .where(eq(articles.status, 'published'));
+      .where(and(...conditions));
 
     return {
-      articles: result as Article[],
+      articles: result.map(article => ({
+        ...article,
+        publishedAt: article.publishedAt?.toISOString() || '',
+      })) as Article[],
       total: totalResult.length,
     };
   } catch (error) {

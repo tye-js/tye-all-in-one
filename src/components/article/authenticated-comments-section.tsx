@@ -68,7 +68,7 @@ export default function AuthenticatedCommentsSection({ articleId }: Authenticate
         id: Date.now().toString(),
         userId: session.user.id || '',
         userName: session.user.name || 'Anonymous',
-        userAvatar: session.user.image || undefined,
+        userAvatar: session.user.avatar || undefined,
         content: newComment.trim(),
         createdAt: new Date().toISOString(),
         likes: 0,
@@ -103,7 +103,7 @@ export default function AuthenticatedCommentsSection({ articleId }: Authenticate
         id: Date.now().toString(),
         userId: session.user.id || '',
         userName: session.user.name || 'Anonymous',
-        userAvatar: session.user.image || undefined,
+        userAvatar: session.user.avatar || undefined,
         content: replyContent.trim(),
         createdAt: new Date().toISOString(),
         likes: 0,
@@ -189,7 +189,7 @@ export default function AuthenticatedCommentsSection({ articleId }: Authenticate
           <form onSubmit={handleSubmitComment} className="space-y-4">
             <div className="flex items-start space-x-3">
               <Avatar className="w-8 h-8">
-                <AvatarImage src={session.user.image || undefined} alt={session.user.name || 'User'} />
+                <AvatarImage src={session.user.avatar || undefined} alt={session.user.name || 'User'} />
                 <AvatarFallback className="bg-blue-100 text-blue-700">
                   {session.user.name?.charAt(0) || 'U'}
                 </AvatarFallback>

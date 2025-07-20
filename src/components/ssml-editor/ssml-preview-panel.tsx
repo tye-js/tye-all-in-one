@@ -15,7 +15,7 @@ import {
   FileAudio,
   Loader2
 } from 'lucide-react';
-import { SSMLSettings } from './ssml-editor-interface';
+import { SSMLSettings } from '@/types/ssml';
 
 interface SSMLPreviewPanelProps {
   ssmlCode: string;

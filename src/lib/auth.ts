@@ -85,7 +85,7 @@ export const authOptions: NextAuthOptions = {
           if (updatedUser.length > 0) {
             token.role = updatedUser[0].role;
             token.membershipTier = updatedUser[0].membershipTier;
-            token.membershipExpiresAt = updatedUser[0].membershipExpiresAt;
+            token.membershipExpiresAt = updatedUser[0].membershipExpiresAt?.toISOString();
           }
         } catch (error) {
           console.error('Error updating session:', error);

@@ -168,7 +168,7 @@ export async function PUT(
         processedContent: processed.html,
         contentMetadata: processed.metadata,
         processedAt: new Date(),
-      };
+      } as any;
     }
 
     // Update article

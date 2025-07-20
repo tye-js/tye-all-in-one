@@ -123,7 +123,7 @@ export default function ProfileContent() {
           <CardContent className="space-y-6">
             <div className="flex items-center gap-6">
               <Avatar className="w-20 h-20">
-                <AvatarImage src={session.user.image || ''} alt={session.user.name || ''} />
+                <AvatarImage src={session.user.avatar || ''} alt={session.user.name || ''} />
                 <AvatarFallback className="text-lg">
                   {getInitials(session.user.name || session.user.email || 'U')}
                 </AvatarFallback>
@@ -178,11 +178,7 @@ export default function ProfileContent() {
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-gray-400" />
                   <span className="text-sm">{session.user.email}</span>
-                  {session.user.emailVerified && (
-                    <Badge variant="outline" className="text-green-600 border-green-600">
-                      Verified
-                    </Badge>
-                  )}
+                  {/* TODO: Add email verification status */}
                 </div>
               </div>
             </div>

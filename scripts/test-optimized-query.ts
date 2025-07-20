@@ -38,12 +38,12 @@ async function testOptimizedQuery() {
     // 显示结构化数据的格式
     if (allVoices.length > 0) {
       console.log('📋 Sample structured data:');
-      const sampleLocale = allVoices[0];
+      const sampleLocale = allVoices[0] as any;
       console.log(`   • Locale: ${sampleLocale.locale}`);
       console.log(`   • Voices count: ${sampleLocale.voices.length}`);
 
       if (sampleLocale.voices.length > 0) {
-        const sampleVoice = sampleLocale.voices[0];
+        const sampleVoice = sampleLocale.voices[0] as any;
         console.log(`   • First voice: ${sampleVoice.displayName} (${sampleVoice.name})`);
         console.log(`   • Gender: ${sampleVoice.gender}`);
         console.log(`   • Voice Type: ${sampleVoice.voiceType}`);
@@ -69,7 +69,7 @@ async function testOptimizedQuery() {
 
     // 显示中文语音
     if (chineseResult.length > 0) {
-      const chineseLocale = chineseResult[0];
+      const chineseLocale = chineseResult[0] as any;
       console.log(`📋 Chinese voices (${chineseLocale.locale}): ${chineseLocale.voices.length} voices`);
       chineseLocale.voices.slice(0, 5).forEach((voice: any) => {
         console.log(`   • ${voice.displayName} (${voice.localName}) - ${voice.gender}`);
@@ -104,13 +104,13 @@ async function testOptimizedQuery() {
     console.log(`✅ English voices: ${englishVoices.length} results in ${endTime5 - startTime5}ms`);
     
     // 显示有风格的英文语音
-    const englishVoicesWithStyles = englishVoices.filter(voice => 
+    const englishVoicesWithStyles = (englishVoices as any[]).filter((voice: any) =>
       voice.styleList && Array.isArray(voice.styleList) && voice.styleList.length > 0
     );
-    
+
     if (englishVoicesWithStyles.length > 0) {
       console.log('📋 English voices with styles:');
-      englishVoicesWithStyles.slice(0, 3).forEach(voice => {
+      englishVoicesWithStyles.slice(0, 3).forEach((voice: any) => {
         console.log(`   • ${voice.displayName} (${voice.localName}) - ${voice.gender}`);
         console.log(`     Styles: [${voice.styleList.join(', ')}]`);
       });
@@ -126,7 +126,7 @@ async function testOptimizedQuery() {
     
     if (germanVoices.length > 0) {
       console.log('📋 German voices:');
-      germanVoices.forEach(voice => {
+      (germanVoices as any[]).forEach((voice: any) => {
         console.log(`   • ${voice.displayName} (${voice.localName}) - ${voice.gender}`);
         if (voice.styleList && Array.isArray(voice.styleList) && voice.styleList.length > 0) {
           console.log(`     Styles: [${voice.styleList.join(', ')}]`);
@@ -170,8 +170,8 @@ async function testOptimizedQuery() {
     console.log(`   🌍 Total locales: ${allVoices.length}`);
 
     // 检查数据类型
-    if (allVoices.length > 0 && allVoices[0].voices.length > 0) {
-      const sample = allVoices[0].voices[0];
+    if (allVoices.length > 0 && (allVoices[0] as any).voices.length > 0) {
+      const sample = (allVoices[0] as any).voices[0];
       console.log('\n🔍 Data Type Check:');
       console.log(`   • styleList type: ${Array.isArray(sample.styleList) ? 'Array' : typeof sample.styleList}`);
       console.log(`   • voiceTag type: ${typeof sample.voiceTag}`);

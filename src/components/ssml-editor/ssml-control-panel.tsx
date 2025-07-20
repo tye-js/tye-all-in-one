@@ -18,7 +18,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { VoiceList } from '@/components/tts/types';
-import { SSMLSegment, SSMLSettings } from './ssml-editor-interface';
+import { SSMLSegment, SSMLSettings } from '@/types/ssml';
 
 interface SSMLControlPanelProps {
   voices: VoiceList[];
@@ -49,7 +49,7 @@ export default function SSMLControlPanel({
     const languages = new Set(voices.map(voice => voice.locale));
     return Array.from(languages).map(locale => ({
       code: locale,
-      name: voices.find(v => v.locale === locale)?.localeName || locale,
+      name: voices.find(v => v.locale === locale)?.voices?.[0]?.localeName || locale,
     }));
   };
 

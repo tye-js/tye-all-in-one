@@ -33,6 +33,9 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
+// TypeScript 类型断言，确保 DATABASE_URL 不是 undefined
+const dbUrl: string = DATABASE_URL;
+
 async function createUser(email: string, password: string, name?: string, role: 'user' | 'admin' = 'user') {
   const hashedPassword = await bcrypt.hash(password, 12);
   
@@ -51,7 +54,7 @@ async function createUser(email: string, password: string, name?: string, role: 
 
 console.log('🌱 Starting database seeding...');
 
-const client = postgres(DATABASE_URL, { prepare: false });
+const client = postgres(dbUrl, { prepare: false });
 const db = drizzle(client, { schema: { users, categories, articles, tags } });
 
 async function seedDatabase() {
